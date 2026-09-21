@@ -39,13 +39,21 @@ def evaluate_policy(request: InferenceRequest, node: NodeInventory, model: Model
     if request.max_context_tokens and model.context_window and request.max_context_tokens > model.context_window:
         return PolicyResult(False, "requested context exceeds model context window")
 
-    if node.policy.max_context_tokens and request.max_context_tokens and request.max_context_tokens > node.policy.max_context_tokens:
+    if (
+        node.policy.max_context_tokens
+        and request.max_context_tokens
+        and request.max_context_tokens > node.policy.max_context_tokens
+    ):
         return PolicyResult(False, "requested context exceeds node policy")
 
     if request.max_output_tokens and model.max_output_tokens and request.max_output_tokens > model.max_output_tokens:
         return PolicyResult(False, "requested output exceeds model limit")
 
-    if node.policy.max_output_tokens and request.max_output_tokens and request.max_output_tokens > node.policy.max_output_tokens:
+    if (
+        node.policy.max_output_tokens
+        and request.max_output_tokens
+        and request.max_output_tokens > node.policy.max_output_tokens
+    ):
         return PolicyResult(False, "requested output exceeds node output policy")
 
     missing_tags = [tag for tag in request.required_tags if tag not in model.tags and tag not in node.policy.tags]

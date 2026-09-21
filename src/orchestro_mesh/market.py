@@ -18,7 +18,9 @@ class CapabilityMarket:
     def list_nodes(self) -> list[NodeInventory]:
         return list(self._nodes.values())
 
-    def find_models(self, task_class: TaskClass | None = None, tags: Iterable[str] = ()) -> list[tuple[NodeInventory, ModelCapability]]:
+    def find_models(
+        self, task_class: TaskClass | None = None, tags: Iterable[str] = ()
+    ) -> list[tuple[NodeInventory, ModelCapability]]:
         tag_set = set(tags)
         found: list[tuple[NodeInventory, ModelCapability]] = []
         for node in self._nodes.values():

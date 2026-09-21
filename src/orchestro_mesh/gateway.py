@@ -65,9 +65,7 @@ def _has_tools(payload: dict[str, Any]) -> bool:
     choice = payload.get("tool_choice")
     if isinstance(choice, str) and choice not in {"", "none"}:
         return True
-    if isinstance(choice, dict):
-        return True
-    return False
+    return isinstance(choice, dict)
 
 
 def _is_transient_backend_error(exc: BaseException) -> bool:
@@ -121,7 +119,7 @@ async def _probe_loop(store: MeshStore, interval_s: float, stop: asyncio.Event) 
             logger.warning("probe.loop_error error=%s", exc)
         try:
             await asyncio.wait_for(stop.wait(), timeout=interval_s)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             continue
 
 
@@ -163,7 +161,7 @@ def create_gateway_app(config: MeshConfig | None = None) -> FastAPI:
             if task is not None:
                 try:
                     await asyncio.wait_for(task, timeout=5.0)
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     task.cancel()
 
     app = FastAPI(title="Orchestro Mesh Gateway", version="0.1.0", lifespan=lifespan)
@@ -564,7 +562,9 @@ async def _stream_with_fallback(
 
     async def streamer():
         try:
-            async for chunk in client.stream_chat_completions(request, model_id=candidate.model.id, raw_payload=payload):
+            async for chunk in client.stream_chat_completions(
+                request, model_id=candidate.model.id, raw_payload=payload
+            ):
                 counter.feed(chunk)
                 yield chunk
             output_tokens = count_text_tokens(counter.text, model_id=candidate.model.id)

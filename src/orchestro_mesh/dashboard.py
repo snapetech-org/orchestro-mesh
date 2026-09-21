@@ -11,8 +11,8 @@ HTML string. Auto-refreshes via meta tag.
 from __future__ import annotations
 
 import html
-from datetime import datetime, timezone
-from typing import Iterable
+from collections.abc import Iterable
+from datetime import UTC, datetime
 
 from orchestro_mesh.config import MeshConfig
 from orchestro_mesh.models import FeedbackRating, JobRecord, NodeInventory
@@ -57,7 +57,7 @@ def _humanize_age(ts: datetime | None, now: datetime) -> str:
     if ts is None:
         return "—"
     if ts.tzinfo is None:
-        ts = ts.replace(tzinfo=timezone.utc)
+        ts = ts.replace(tzinfo=UTC)
     delta_s = (now - ts).total_seconds()
     if delta_s < 0:
         delta_s = 0
@@ -89,7 +89,11 @@ def _render_nodes(nodes: Iterable[NodeInventory], now: datetime, ttl: int | None
     for node in nodes:
         age = _humanize_age(node.last_seen, now)
         ttl_warn = ""
-        if ttl and node.last_seen and (now - node.last_seen.replace(tzinfo=node.last_seen.tzinfo or timezone.utc)).total_seconds() > ttl:
+        if (
+            ttl
+            and node.last_seen
+            and (now - node.last_seen.replace(tzinfo=node.last_seen.tzinfo or UTC)).total_seconds() > ttl
+        ):
             ttl_warn = ' <span class="status-bad">stale</span>'
         rows.append(
             f"<tr>"
@@ -197,10 +201,10 @@ def _render_usage(totals: dict[str, float], quotas: dict[str, float], cpk: float
         )
     return (
         '<div class="panel"><table>'
-        f"<tr><th>requester</th>"
-        f'<th class="num">credits used</th>'
-        f'<th class="num">quota</th>'
-        f'<th class="num">% used</th></tr>'
+        "<tr><th>requester</th>"
+        '<th class="num">credits used</th>'
+        '<th class="num">quota</th>'
+        '<th class="num">% used</th></tr>'
         + "".join(rows)
         + "</table></div>"
         + f'<div class="meta">credits_per_1k_tokens = {cpk}</div>'
@@ -246,7 +250,7 @@ def render_dashboard(
     config: MeshConfig,
     refresh_s: int = 5,
 ) -> str:
-    now = datetime.now(tz=timezone.utc)
+    now = datetime.now(tz=UTC)
     nodes = store.list_nodes()
     jobs = store.recent_jobs(limit=20)
     feedback = store.recent_feedback(limit=10)

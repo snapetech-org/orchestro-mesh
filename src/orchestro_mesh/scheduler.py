@@ -51,7 +51,9 @@ class Scheduler:
             for model in node.models:
                 backend = node.backend_by_id(model.backend_id)
                 if backend is None:
-                    rejections.append(RouteRejection(node_id=node.node_id, model_id=model.id, reason="model backend is missing"))
+                    rejections.append(
+                        RouteRejection(node_id=node.node_id, model_id=model.id, reason="model backend is missing")
+                    )
                     continue
 
                 policy = evaluate_policy(request, node, model)

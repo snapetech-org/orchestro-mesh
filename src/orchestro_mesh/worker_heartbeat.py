@@ -81,7 +81,7 @@ class HeartbeatLoop:
             delay = self._next_delay()
             try:
                 await asyncio.wait_for(self._stop.wait(), timeout=delay)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 continue
 
     def start(self) -> None:
@@ -94,6 +94,6 @@ class HeartbeatLoop:
         if self._task is not None:
             try:
                 await asyncio.wait_for(self._task, timeout=5.0)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 self._task.cancel()
             self._task = None

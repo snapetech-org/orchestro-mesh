@@ -152,7 +152,9 @@ class ModelCapability(BaseModel):
 class NodePolicy(BaseModel):
     allowed_users: list[str] = Field(default_factory=list)
     allowed_sensitivities: list[Sensitivity] = Field(default_factory=lambda: [Sensitivity.PUBLIC])
-    denied_sensitivities: list[Sensitivity] = Field(default_factory=lambda: [Sensitivity.SECRET_LOCAL, Sensitivity.TOOL_LOCAL])
+    denied_sensitivities: list[Sensitivity] = Field(
+        default_factory=lambda: [Sensitivity.SECRET_LOCAL, Sensitivity.TOOL_LOCAL]
+    )
     max_concurrent_jobs: int = Field(default=1, ge=1)
     max_context_tokens: int | None = None
     max_output_tokens: int | None = None

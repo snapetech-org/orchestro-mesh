@@ -44,7 +44,6 @@ def apply_env_overrides(config: MeshConfig) -> MeshConfig:
         config.worker_token = worker_token
     if (store_path := os.environ.get("ORCHESTRO_MESH_STORE_PATH")):
         config.store_path = store_path
-    if (mode := os.environ.get("ORCHESTRO_MESH_REDACTION_MODE")):
-        if mode in {"off", "log", "block"}:
-            config.redaction_mode = mode  # type: ignore[assignment]
+    if (mode := os.environ.get("ORCHESTRO_MESH_REDACTION_MODE")) and mode in {"off", "log", "block"}:
+        config.redaction_mode = mode  # type: ignore[assignment]
     return config

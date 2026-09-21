@@ -13,7 +13,10 @@ DEFAULT_BENCH_MESSAGES = [
 
 TOOL_BENCH_MESSAGES = [
     ChatMessage(role="system", content="You are a tool-planning assistant. Do not execute tools."),
-    ChatMessage(role="user", content="Given a failing pytest run, outline the tool calls and expected outputs needed to debug it."),
+    ChatMessage(
+        role="user",
+        content="Given a failing pytest run, outline the tool calls and expected outputs needed to debug it.",
+    ),
 ]
 
 
@@ -39,7 +42,8 @@ async def run_chat_benchmark(
     prompt_id: str = "chat-default",
     task_class: TaskClass = TaskClass.CHAT,
 ) -> BenchmarkSample:
-    bench_messages = list(messages or (TOOL_BENCH_MESSAGES if task_class == TaskClass.TOOL_USE else DEFAULT_BENCH_MESSAGES))
+    default_messages = TOOL_BENCH_MESSAGES if task_class == TaskClass.TOOL_USE else DEFAULT_BENCH_MESSAGES
+    bench_messages = list(messages or default_messages)
     input_tokens = sum(estimate_tokens(str(message.content or "")) for message in bench_messages)
     request = InferenceRequest(
         requester="benchmark",

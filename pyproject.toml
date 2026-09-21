@@ -40,7 +40,13 @@ src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
-ignore = []
+# UP042: these stay (str, Enum). StrEnum changes str() and f-string output, and the wire
+# format should not shift because a linter added a rule.
+ignore = ["UP042"]
+
+[tool.ruff.lint.flake8-bugbear]
+# Typer declares CLI options as call expressions in argument defaults, by design.
+extend-immutable-calls = ["typer.Option", "typer.Argument"]
 
 [tool.pytest.ini_options]
 addopts = "-q"
