@@ -141,3 +141,7 @@ The companion Orchestro repo (`orchestro/src/orchestro/backends/mesh.py` + `mesh
 ## Repo status
 
 This is an implementation scaffold, not a hardened distributed platform yet. The high-value next pass is to wire this directly into the existing Orchestro backend registry and add authenticated worker-to-gateway registration over WireGuard/Tailscale/Headscale.
+
+## Local security scanning
+
+Run `./scripts/security-scan-local.sh` for local Semgrep CE and the Trivy scanners that fit this repository. The installed pre-commit hook runs Semgrep on staged source/config files only; Trivy runs on demand or in CI. See [security-scanning.md](docs/security-scanning.md). Use `./scripts/update-security-tools.sh` to refresh local scanner data and the Trivy database.
