@@ -1,0 +1,76 @@
+# ng-runner-policy: private-jit-only-v1
+name: Public fork validation
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on:
+      group: public-fork-jit
+      labels: [self-hosted, linux, x64, public-pr-orchestro-mesh, ng-public-run-${{ github.run_id }}]
+    timeout-minutes: 60
+    steps:
+      - name: Check out orchestro-mesh PR
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: orchestro-mesh
+          persist-credentials: false
+
+      - name: Check out orchestro
+        uses: actions/checkout@v4
+        with:
+          repository: snapetech/orchestro
+          ref: main
+          path: orchestro
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install both packages
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ./orchestro-mesh[dev]
+          python -m pip install -e ./orchestro
+
+      - name: Verify cross-imports
+        run: |
+          python -c "import orchestro_mesh, orchestro; print('mesh', orchestro_mesh.__version__)"
+          python -c "from orchestro.backends.mesh import MeshBackend; from orchestro import mesh_feedback; print('mesh backend + feedback ok')"
+
+      - name: Run mesh unit suite
+        working-directory: orchestro-mesh
+        run: pytest tests --ignore=tests/e2e
+
+      - name: Run cross-repo e2e suite
+        working-directory: orchestro-mesh
+        run: pytest tests/e2e -v
+
+      - name: Check Python style
+        working-directory: orchestro-mesh
+        run: ruff check src tests
+
+      - name: Scan with Semgrep Community Edition
+        working-directory: orchestro-mesh
+        run: |
+          docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -e EIO_BACKEND=posix \
+            -v "$GITHUB_WORKSPACE/orchestro-mesh:/src" -w /src semgrep/semgrep:latest \
+            semgrep scan --config p/default --metrics=off --jobs 2 \
+              --json-output semgrep.json --sarif-output semgrep.sarif .
+
+      - name: Install Trivy
+        uses: aquasecurity/setup-trivy@e07451d2e059ed86c2870430ea286b3a9e0bf241 # latest
+        with:
+          version: latest
+          token: ${{ github.token }}
+
+      - name: Scan source, dependencies, and configuration
+        working-directory: orchestro-mesh
+        run: ./scripts/security-scan-local.sh --trivy-only --ci
