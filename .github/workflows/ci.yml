@@ -7,6 +7,7 @@ on:
 
 jobs:
   test:
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: ${{ fromJSON(format('{{"group":"ng-shared-main-jit","labels":["self-hosted","linux","x64","ng-shared-main-orchestro-mesh","ng-main-run-{0}","gha-{0}-test"]}}', github.run_id)) }}
     steps:
       - uses: actions/checkout@v4
