@@ -1,12 +1,21 @@
 # ng-runner-policy: private-jit-only-v1
 name: CI
 
+
+run-name: ${{ format('action:{0}:pool:{1}', inputs.action, inputs.runner_pool) }}
 on:
-  push:
-    branches-ignore:
-      - "main"
-    tags:
-      - "*"
+  workflow_dispatch:
+    inputs:
+      action:
+        description: Required private CI action
+        type: choice
+        options: [ci]
+        required: true
+      runner_pool:
+        description: Required private JIT runner pool
+        type: choice
+        options: [private]
+        required: true
   pull_request:
     types: [labeled]
 
@@ -23,7 +32,7 @@ jobs:
         contains(github.event.pull_request.labels.*.name, 'pool:private') &&
         github.event.pull_request.head.repo.full_name == github.repository
         ) ||
-        (github.event_name != 'pull_request' && github.event_name != 'pull_request_target' && github.event_name != 'workflow_dispatch')
+        (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.action == 'ci' && inputs.runner_pool == 'private')
       ) &&
       (
         github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
