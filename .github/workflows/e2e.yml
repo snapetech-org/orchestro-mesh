@@ -3,9 +3,24 @@ name: e2e (cross-repo)
 
 on:
   push:
+    branches-ignore:
+      - "main"
+    tags:
+      - "*"
   pull_request:
+    types: [labeled]
   workflow_dispatch:
     inputs:
+      action:
+        description: Required workflow action
+        type: choice
+        options: [ci]
+        required: true
+      runner_pool:
+        description: Required private JIT runner pool
+        type: choice
+        options: [private]
+        required: true
       orchestro_ref:
         description: "Git ref of snapetech/orchestro to test against"
         required: false
@@ -13,6 +28,28 @@ on:
 
 jobs:
   cross-repo:
+    # Keep external fork code off trusted JIT groups until its isolated route is authorized.
+    if: >-
+      (
+        (
+        github.event_name == 'pull_request' &&
+        github.event.action == 'labeled' &&
+        (github.event.label.name == 'action:ci' || github.event.label.name == 'pool:private') &&
+        contains(github.event.pull_request.labels.*.name, 'action:ci') &&
+        contains(github.event.pull_request.labels.*.name, 'pool:private') &&
+        github.event.pull_request.head.repo.full_name == github.repository
+        ) ||
+        (
+        github.event_name == 'workflow_dispatch' &&
+        github.ref == 'refs/heads/main' &&
+        inputs.action == 'ci' &&
+        inputs.runner_pool == 'private'
+        ) ||
+        (github.event_name != 'pull_request' && github.event_name != 'pull_request_target' && github.event_name != 'workflow_dispatch')
+      ) &&
+      (
+        github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+      )
     runs-on: ${{ fromJSON(format('{{"group":"ng-shared-main-jit","labels":["self-hosted","linux","x64","ng-shared-main-orchestro-mesh","ng-main-run-{0}","gha-{0}-cross-repo"]}}', github.run_id)) }}
     steps:
       - name: Check out orchestro-mesh
