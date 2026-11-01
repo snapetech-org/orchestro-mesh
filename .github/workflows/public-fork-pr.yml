@@ -1,0 +1,17 @@
+# ng-runner-policy: private-jit-only-v1
+name: Public fork validation
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    if: >-
+      github.event.pull_request.head.repo.full_name != github.repository &&
+      github.event.pull_request.head.repo.fork == true &&
+      github.event.pull_request.head.repo.private == false
+    uses: snapetech-org/orchestro-mesh/.github/workflows/fork-safe-validation.yml@ab6dbdf848648f17e729f0bbec93928bbfeac4f3
