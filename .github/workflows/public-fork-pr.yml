@@ -3,6 +3,7 @@ name: Public fork validation
 
 on:
   pull_request:
+    types: [labeled]
     branches: [main]
 
 permissions:
@@ -11,7 +12,15 @@ permissions:
 jobs:
   validate:
     if: >-
-      github.event.pull_request.head.repo.full_name != github.repository &&
+      github.event.action == 'labeled' &&
+      github.actor == 'snapetech' &&
+      (startsWith(github.event.label.name, 'action:') ||
+       startsWith(github.event.label.name, 'pool:')) &&
+      contains(github.event.pull_request.labels.*.name, 'action:ci') &&
+      (contains(github.event.pull_request.labels.*.name, 'pool:public') ||
+       contains(github.event.pull_request.labels.*.name, 'pool:hybrid')) &&
       github.event.pull_request.head.repo.fork == true &&
-      github.event.pull_request.head.repo.private == false
+      github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name &&
+      github.event.pull_request.base.repo.full_name == 'snapetech-org/orchestro-mesh' &&
+      github.event.pull_request.base.ref == 'main'
     uses: snapetech-org/orchestro-mesh/.github/workflows/fork-safe-validation.yml@ab6dbdf848648f17e729f0bbec93928bbfeac4f3
